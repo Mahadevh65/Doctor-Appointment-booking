@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Patient Dashboard – Hospital Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-hospital fs-4"></i>
+      <div><h5 class="mb-0">HMS</h5><small>Patient Portal</small></div>
+    </div>
+  </div>
+  <ul class="sidebar-nav list-unstyled">
+    <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="doctors"><i class="bi bi-heart-pulse"></i>Find Doctors</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="appointments"><i class="bi bi-calendar-check"></i>My Appointments</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="profile"><i class="bi bi-person-gear"></i>My Profile</a></li>
+  </ul>
+  <div class="sidebar-footer"><i class="bi bi-person-heart me-1"></i>Patient Portal</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-sm btn-outline-secondary d-md-none" id="sidebar-toggle"><i class="bi bi-list"></i></button>
+      <h6 class="mb-0 fw-bold" id="page-title">Dashboard</h6>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-end d-none d-sm-block">
+        <div class="fw-semibold" id="user-name" style="font-size:.875rem"></div>
+        <div class="text-muted" id="user-role" style="font-size:.75rem"></div>
+      </div>
+      <button class="btn btn-sm btn-outline-danger" onclick="Auth.logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- ── DASHBOARD ── -->
+    <section id="section-dashboard">
+      <!-- Welcome banner -->
+      <div class="card border-0 mb-4" style="background:linear-gradient(135deg,#1a237e,#0288d1);color:#fff;border-radius:16px">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h4 class="fw-bold mb-1">Welcome back, <span id="welcome-name"></span>! 👋</h4>
+              <p class="mb-0 opacity-75">Manage your health appointments easily</p>
+            </div>
+            <i class="bi bi-heart-pulse-fill fs-1 opacity-50 d-none d-md-block"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3"><div class="card stat-card h-100"><div class="card-body p-3"><div class="icon-box bg-warning bg-opacity-15 mb-2"><i class="bi bi-clock text-warning"></i></div><div class="fs-3 fw-bold" id="s-pending">—</div><div class="text-muted small">Pending</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card stat-card h-100"><div class="card-body p-3"><div class="icon-box bg-success bg-opacity-15 mb-2"><i class="bi bi-check-circle text-success"></i></div><div class="fs-3 fw-bold" id="s-approved">—</div><div class="text-muted small">Approved</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card stat-card h-100"><div class="card-body p-3"><div class="icon-box bg-primary bg-opacity-15 mb-2"><i class="bi bi-star text-primary"></i></div><div class="fs-3 fw-bold" id="s-completed">—</div><div class="text-muted small">Completed</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card stat-card h-100"><div class="card-body p-3"><div class="icon-box bg-danger bg-opacity-15 mb-2"><i class="bi bi-x-circle text-danger"></i></div><div class="fs-3 fw-bold" id="s-cancelled">—</div><div class="text-muted small">Cancelled</div></div></div></div>
+      </div>
+
+      <!-- Quick book + recent -->
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card table-card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+              <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-week me-2 text-primary"></i>Recent Appointments</h6>
+              <a href="#" class="btn btn-sm btn-outline-primary" data-section="appointments">View All</a>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead><tr><th>Doctor</th><th>Date</th><th>Status</th><th></th></tr></thead>
+                  <tbody id="recent-appts-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card h-100 border-0" style="background:#f0f4ff;border-radius:14px">
+            <div class="card-body p-4">
+              <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge me-2 text-primary"></i>Quick Book</h6>
+              <p class="text-muted small mb-3">Need to see a doctor? Book an appointment in seconds.</p>
+              <button class="btn btn-primary w-100" data-section="doctors"><i class="bi bi-calendar-plus me-1"></i>Book Appointment</button>
+              <hr/>
+              <h6 class="fw-bold mb-2 small">Health Tips</h6>
+              <ul class="list-unstyled small text-muted">
+                <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i>Drink 8 glasses of water daily</li>
+                <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i>Exercise for 30 minutes a day</li>
+                <li class="mb-1"><i class="bi bi-check2-circle text-success me-1"></i>Get 7–8 hours of sleep</li>
+                <li><i class="bi bi-check2-circle text-success me-1"></i>Schedule regular check-ups</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FIND DOCTORS ── -->
+    <section id="section-doctors" class="d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0"><i class="bi bi-heart-pulse me-2 text-success"></i>Find Doctors</h5>
+      </div>
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body p-3">
+          <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" id="doctor-search" class="form-control border-start-0" placeholder="Search by name or specialization…"/>
+            <button class="btn btn-primary" id="search-btn"><i class="bi bi-search me-1"></i>Search</button>
+          </div>
+        </div>
+      </div>
+      <div id="doctors-grid" class="row g-4"></div>
+    </section>
+
+    <!-- ── MY APPOINTMENTS ── -->
+    <section id="section-appointments" class="d-none">
+      <div class="mb-4"><h5 class="fw-bold mb-0"><i class="bi bi-calendar-check me-2 text-primary"></i>My Appointments</h5></div>
+      <ul class="nav nav-pills mb-3" id="appt-filter-tabs">
+        <li class="nav-item"><a class="nav-link active" href="#" data-filter="ALL">All</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="PENDING">Pending</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="APPROVED">Approved</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="COMPLETED">Completed</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" data-filter="CANCELLED">Cancelled</a></li>
+      </ul>
+      <div class="card table-card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>#</th><th>Doctor</th><th>Date & Time</th><th>Reason</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="my-appointments-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MY PROFILE ── -->
+    <section id="section-profile" class="d-none">
+      <div class="mb-4"><h5 class="fw-bold mb-0"><i class="bi bi-person-gear me-2 text-primary"></i>My Profile</h5></div>
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white py-3"><h6 class="mb-0 fw-bold">Personal Information</h6></div>
+            <div class="card-body">
+              <div id="profile-alert" class="alert d-none"></div>
+              <form id="profile-form">
+                <div class="row g-3">
+                  <div class="col-md-6"><label class="form-label fw-semibold">First Name</label><input type="text" id="p-firstName" class="form-control"/></div>
+                  <div class="col-md-6"><label class="form-label fw-semibold">Last Name</label><input type="text" id="p-lastName" class="form-control"/></div>
+                  <div class="col-md-6"><label class="form-label fw-semibold">Phone</label><input type="tel" id="p-phone" class="form-control"/></div>
+                  <div class="col-md-6"><label class="form-label fw-semibold">Date of Birth</label><input type="date" id="p-dob" class="form-control"/></div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Gender</label>
+                    <select id="p-gender" class="form-select">
+                      <option value="">Select</option>
+                      <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Blood Group</label>
+                    <select id="p-blood" class="form-select">
+                      <option value="">Select</option>
+                      <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                      <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+                    </select>
+                  </div>
+                  <div class="col-12"><label class="form-label fw-semibold">Address</label><input type="text" id="p-address" class="form-control"/></div>
+                  <div class="col-md-4"><label class="form-label fw-semibold">City</label><input type="text" id="p-city" class="form-control"/></div>
+                  <div class="col-md-4"><label class="form-label fw-semibold">State</label><input type="text" id="p-state" class="form-control"/></div>
+                  <div class="col-md-4"><label class="form-label fw-semibold">Pincode</label><input type="text" id="p-pincode" class="form-control"/></div>
+                  <div class="col-md-6"><label class="form-label fw-semibold">Emergency Contact Name</label><input type="text" id="p-ec-name" class="form-control"/></div>
+                  <div class="col-md-6"><label class="form-label fw-semibold">Emergency Contact Phone</label><input type="tel" id="p-ec-phone" class="form-control"/></div>
+                  <div class="col-12"><label class="form-label fw-semibold">Allergies</label><textarea id="p-allergies" class="form-control" rows="2" placeholder="List any allergies…"></textarea></div>
+                  <div class="col-12"><label class="form-label fw-semibold">Medical History</label><textarea id="p-history" class="form-control" rows="3" placeholder="Previous conditions, surgeries, medications…"></textarea></div>
+                </div>
+                <div class="mt-4"><button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-1"></i>Save Profile</button></div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- Book Appointment Modal -->
+<div class="modal fade" id="bookModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Book Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="book-alert" class="alert d-none"></div>
+        <!-- Doctor summary -->
+        <div class="d-flex align-items-center gap-3 p-3 rounded-3 mb-4" style="background:#f0f4ff">
+          <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#0288d1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem">
+            <i class="bi bi-heart-pulse"></i>
+          </div>
+          <div>
+            <div class="fw-bold" id="book-doctor-name"></div>
+            <div class="text-muted small" id="book-doctor-spec"></div>
+            <div class="text-primary small" id="book-doctor-fee"></div>
+          </div>
+        </div>
+        <input type="hidden" id="book-doctor-id"/>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Appointment Date *</label>
+            <input type="date" id="book-date" class="form-control" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Appointment Time *</label>
+            <input type="time" id="book-time" class="form-control" required/>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Reason for Visit</label>
+            <input type="text" id="book-reason" class="form-control" placeholder="e.g. Routine check-up, Fever, Headache…"/>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">Symptoms</label>
+            <textarea id="book-symptoms" class="form-control" rows="3" placeholder="Describe your symptoms in detail…"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirm-book-btn">
+          <i class="bi bi-calendar-check me-1"></i>Confirm Booking
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  if (!Auth.requireRole('PATIENT')) throw new Error('Unauthorized');
+  populateTopbar();
+
+  const user = Auth.get();
+  document.getElementById('welcome-name').textContent = user.firstName || '';
+
+  let allMyAppointments = [];
+  let currentFilter = 'ALL';
+
+  // Navigation
+  document.querySelectorAll('[data-section]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      switchSection(e.currentTarget.dataset.section);
+    });
+  });
+
+  function switchSection(name) {
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('d-none'));
+    document.getElementById('section-' + name)?.classList.remove('d-none');
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelector(`.sidebar-nav [data-section="${name}"]`)?.classList.add('active');
+    document.getElementById('page-title').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    if (name === 'dashboard')    loadDashboard();
+    if (name === 'doctors')      loadDoctors();
+    if (name === 'appointments') loadMyAppointments();
+    if (name === 'profile')      loadProfile();
+  }
+
+  // ── Dashboard ──
+  async function loadDashboard() {
+    try {
+      allMyAppointments = await get('/patient/appointments');
+      document.getElementById('s-pending').textContent   = allMyAppointments.filter(a => a.status==='PENDING').length;
+      document.getElementById('s-approved').textContent  = allMyAppointments.filter(a => a.status==='APPROVED').length;
+      document.getElementById('s-completed').textContent = allMyAppointments.filter(a => a.status==='COMPLETED').length;
+      document.getElementById('s-cancelled').textContent = allMyAppointments.filter(a => a.status==='CANCELLED').length;
+
+      const recent = allMyAppointments.slice(0, 6);
+      document.getElementById('recent-appts-tbody').innerHTML = recent.map(a => `
+        <tr>
+          <td>
+            <div class="fw-semibold">Dr. ${a.doctorName}</div>
+            <small class="text-muted">${a.doctorSpecialization}</small>
+          </td>
+          <td>${a.appointmentDate}<br><small class="text-muted">${a.appointmentTime}</small></td>
+          <td>${statusBadge(a.status)}</td>
+          <td>
+            ${a.status === 'PENDING'
+              ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelAppt(${a.id})"><i class="bi bi-x-circle"></i></button>`
+              : ''}
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" class="text-center text-muted py-4">No appointments yet</td></tr>';
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  // ── Find Doctors ──
+  async function loadDoctors(searchTerm = '') {
+    try {
+      const url = searchTerm ? `/doctors/list?search=${encodeURIComponent(searchTerm)}` : '/doctors/list';
+      const doctors = await get(url);
+      renderDoctorCards(doctors);
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  function renderDoctorCards(doctors) {
+    const grid = document.getElementById('doctors-grid');
+    if (!doctors.length) {
+      grid.innerHTML = `<div class="col-12 text-center py-5 text-muted">
+        <i class="bi bi-search fs-1 d-block mb-2"></i>No doctors found</div>`;
+      return;
+    }
+    grid.innerHTML = doctors.map(d => `
+      <div class="col-sm-6 col-xl-4">
+        <div class="card doctor-card h-100">
+          <div class="card-header-gradient"></div>
+          <div class="card-body pt-0 text-center">
+            <div class="avatar mb-2"><i class="bi bi-person-circle"></i></div>
+            <h6 class="fw-bold mb-0">Dr. ${d.firstName} ${d.lastName}</h6>
+            <div class="text-primary small mb-2">${d.specialization}</div>
+            <div class="text-muted small mb-1">${d.qualification || ''}</div>
+            <div class="d-flex justify-content-center gap-3 mb-3 small">
+              <span><i class="bi bi-clock me-1 text-muted"></i>${d.experienceYears || 0} yrs</span>
+              <span><i class="bi bi-currency-rupee me-1 text-muted"></i>${d.consultationFee}</span>
+            </div>
+            ${d.department ? `<div class="badge bg-info bg-opacity-15 text-info mb-2">${d.department}</div>` : ''}
+            ${d.availableDays ? `<div class="text-muted small mb-3"><i class="bi bi-calendar3 me-1"></i>${d.availableDays}</div>` : ''}
+            <button class="btn btn-primary btn-sm w-100" onclick="openBookModal(${d.id},'${d.firstName} ${d.lastName}','${d.specialization}',${d.consultationFee})">
+              <i class="bi bi-calendar-plus me-1"></i>Book Appointment
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('search-btn').addEventListener('click', () => {
+    loadDoctors(document.getElementById('doctor-search').value.trim());
+  });
+  document.getElementById('doctor-search').addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') loadDoctors(e.target.value.trim());
+  });
+
+  // ── Book Appointment ──
+  function openBookModal(doctorId, name, spec, fee) {
+    document.getElementById('book-doctor-id').value    = doctorId;
+    document.getElementById('book-doctor-name').textContent = `Dr. ${name}`;
+    document.getElementById('book-doctor-spec').textContent = spec;
+    document.getElementById('book-doctor-fee').textContent  = `Consultation Fee: ₹${fee}`;
+    document.getElementById('book-date').value     = '';
+    document.getElementById('book-time').value     = '';
+    document.getElementById('book-reason').value   = '';
+    document.getElementById('book-symptoms').value = '';
+    document.getElementById('book-alert').classList.add('d-none');
+    // Min date = today
+    document.getElementById('book-date').min = new Date().toISOString().split('T')[0];
+    new bootstrap.Modal(document.getElementById('bookModal')).show();
+  }
+
+  document.getElementById('confirm-book-btn').addEventListener('click', async () => {
+    const alertEl = document.getElementById('book-alert');
+    alertEl.classList.add('d-none');
+    const date = document.getElementById('book-date').value;
+    const time = document.getElementById('book-time').value;
+    if (!date || !time) {
+      alertEl.textContent = 'Please select a date and time.';
+      alertEl.className = 'alert alert-warning';
+      alertEl.classList.remove('d-none');
+      return;
+    }
+    try {
+      await post('/patient/appointments/book', {
+        doctorId:       parseInt(document.getElementById('book-doctor-id').value),
+        appointmentDate: date,
+        appointmentTime: time,
+        reasonForVisit: document.getElementById('book-reason').value,
+        symptoms:       document.getElementById('book-symptoms').value
+      });
+      bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
+      showToast('Appointment booked successfully!');
+      loadDashboard();
+    } catch(err) {
+      alertEl.textContent = err.message;
+      alertEl.className = 'alert alert-danger';
+      alertEl.classList.remove('d-none');
+    }
+  });
+
+  // ── My Appointments ──
+  async function loadMyAppointments() {
+    try {
+      allMyAppointments = await get('/patient/appointments');
+      renderMyAppointments();
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  function renderMyAppointments() {
+    const filtered = currentFilter === 'ALL'
+      ? allMyAppointments
+      : allMyAppointments.filter(a => a.status === currentFilter);
+    document.getElementById('my-appointments-tbody').innerHTML = filtered.map((a, i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td>
+          <div class="fw-semibold">Dr. ${a.doctorName}</div>
+          <small class="text-muted">${a.doctorSpecialization}</small>
+        </td>
+        <td>${a.appointmentDate}<br><small class="text-muted">${a.appointmentTime}</small></td>
+        <td><small>${a.reasonForVisit || '—'}</small></td>
+        <td>${statusBadge(a.status)}</td>
+        <td>
+          ${a.status === 'PENDING'
+            ? `<button class="btn btn-sm btn-outline-danger" onclick="cancelAppt(${a.id})"><i class="bi bi-x-circle me-1"></i>Cancel</button>`
+            : a.status === 'REJECTED' && a.rejectionReason
+              ? `<span class="text-muted small" title="${a.rejectionReason}"><i class="bi bi-info-circle me-1"></i>Reason</span>`
+              : '—'}
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">No appointments found</td></tr>';
+  }
+
+  document.querySelectorAll('#appt-filter-tabs .nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('#appt-filter-tabs .nav-link').forEach(l => l.classList.remove('active'));
+      e.target.classList.add('active');
+      currentFilter = e.target.dataset.filter;
+      renderMyAppointments();
+    });
+  });
+
+  async function cancelAppt(id) {
+    if (!confirm('Are you sure you want to cancel this appointment?')) return;
+    try {
+      await put(`/patient/appointments/${id}/cancel`);
+      showToast('Appointment cancelled.');
+      loadDashboard(); loadMyAppointments();
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  // ── Profile ──
+  async function loadProfile() {
+    try {
+      const p = await get('/patient/profile');
+      document.getElementById('p-firstName').value  = p.user?.firstName || '';
+      document.getElementById('p-lastName').value   = p.user?.lastName || '';
+      document.getElementById('p-phone').value      = p.user?.phone || '';
+      document.getElementById('p-dob').value        = p.dateOfBirth || '';
+      document.getElementById('p-gender').value     = p.gender || '';
+      document.getElementById('p-blood').value      = p.bloodGroup || '';
+      document.getElementById('p-address').value    = p.address || '';
+      document.getElementById('p-city').value       = p.city || '';
+      document.getElementById('p-state').value      = p.state || '';
+      document.getElementById('p-pincode').value    = p.pincode || '';
+      document.getElementById('p-ec-name').value    = p.emergencyContactName || '';
+      document.getElementById('p-ec-phone').value   = p.emergencyContactPhone || '';
+      document.getElementById('p-allergies').value  = p.allergies || '';
+      document.getElementById('p-history').value    = p.medicalHistory || '';
+    } catch(err) { /* profile may not exist yet */ }
+  }
+
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertEl = document.getElementById('profile-alert');
+    alertEl.classList.add('d-none');
+    try {
+      await put('/patient/profile', {
+        firstName:            document.getElementById('p-firstName').value,
+        lastName:             document.getElementById('p-lastName').value,
+        phone:                document.getElementById('p-phone').value,
+        dateOfBirth:          document.getElementById('p-dob').value || null,
+        gender:               document.getElementById('p-gender').value,
+        bloodGroup:           document.getElementById('p-blood').value,
+        address:              document.getElementById('p-address').value,
+        city:                 document.getElementById('p-city').value,
+        state:                document.getElementById('p-state').value,
+        pincode:              document.getElementById('p-pincode').value,
+        emergencyContactName: document.getElementById('p-ec-name').value,
+        emergencyContactPhone:document.getElementById('p-ec-phone').value,
+        allergies:            document.getElementById('p-allergies').value,
+        medicalHistory:       document.getElementById('p-history').value
+      });
+      showToast('Profile updated successfully!');
+    } catch(err) {
+      alertEl.textContent = err.message;
+      alertEl.className = 'alert alert-danger';
+      alertEl.classList.remove('d-none');
+    }
+  });
+
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  // Boot
+  loadDashboard();
+</script>
+</body>
+</html>

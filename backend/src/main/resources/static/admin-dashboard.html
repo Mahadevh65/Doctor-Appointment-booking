@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard – Hospital Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-hospital fs-4"></i>
+      <div>
+        <h5 class="mb-0">HMS</h5>
+        <small>Admin Panel</small>
+      </div>
+    </div>
+  </div>
+  <ul class="sidebar-nav list-unstyled">
+    <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="doctors"><i class="bi bi-heart-pulse"></i>Manage Doctors</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="patients"><i class="bi bi-people"></i>View Patients</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="appointments"><i class="bi bi-calendar-check"></i>Appointments</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <i class="bi bi-shield-check me-1"></i>Administrator
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-sm btn-outline-secondary d-md-none" id="sidebar-toggle">
+        <i class="bi bi-list"></i>
+      </button>
+      <h6 class="mb-0 fw-bold" id="page-title">Dashboard</h6>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-end d-none d-sm-block">
+        <div class="fw-semibold" id="user-name" style="font-size:.875rem"></div>
+        <div class="text-muted" id="user-role" style="font-size:.75rem"></div>
+      </div>
+      <button class="btn btn-sm btn-outline-danger" onclick="Auth.logout()">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- ── DASHBOARD SECTION ── -->
+    <section id="section-dashboard">
+      <div class="row g-4 mb-4" id="stats-row">
+        <!-- Stat cards injected by JS -->
+      </div>
+      <div class="row g-4">
+        <div class="col-12">
+          <div class="card table-card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+              <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Appointments</h6>
+              <a href="#" class="btn btn-sm btn-outline-primary" data-section="appointments">View All</a>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead>
+                  <tbody id="recent-appointments-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── DOCTORS SECTION ── -->
+    <section id="section-doctors" class="d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0"><i class="bi bi-heart-pulse me-2 text-success"></i>Manage Doctors</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDoctorModal">
+          <i class="bi bi-plus-circle me-1"></i>Add Doctor
+        </button>
+      </div>
+      <div class="card table-card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>#</th><th>Name</th><th>Specialization</th><th>Email</th><th>Fee</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="doctors-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PATIENTS SECTION ── -->
+    <section id="section-patients" class="d-none">
+      <div class="mb-4">
+        <h5 class="fw-bold mb-0"><i class="bi bi-people me-2 text-info"></i>All Patients</h5>
+      </div>
+      <div class="card table-card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Blood Group</th><th>Registered</th></tr></thead>
+              <tbody id="patients-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── APPOINTMENTS SECTION ── -->
+    <section id="section-appointments" class="d-none">
+      <div class="mb-4">
+        <h5 class="fw-bold mb-0"><i class="bi bi-calendar-check me-2 text-warning"></i>All Appointments</h5>
+      </div>
+      <div class="card table-card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date & Time</th><th>Reason</th><th>Status</th></tr></thead>
+              <tbody id="appointments-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-content -->
+</div><!-- /main-content -->
+
+<!-- Add Doctor Modal -->
+<div class="modal fade" id="addDoctorModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add New Doctor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="add-doctor-alert" class="alert d-none"></div>
+        <form id="add-doctor-form">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">First Name *</label>
+              <input type="text" id="d-firstName" class="form-control" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Last Name *</label>
+              <input type="text" id="d-lastName" class="form-control" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Username *</label>
+              <input type="text" id="d-username" class="form-control" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email *</label>
+              <input type="email" id="d-email" class="form-control" required/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Phone</label>
+              <input type="tel" id="d-phone" class="form-control"/>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Password *</label>
+              <input type="password" id="d-password" class="form-control" required minlength="6"/>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="add-doctor-btn">
+          <i class="bi bi-check-circle me-1"></i>Add Doctor
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Auth guard
+  if (!Auth.requireRole('ADMIN')) throw new Error('Unauthorized');
+  populateTopbar();
+
+  // Sidebar navigation
+  document.querySelectorAll('[data-section]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = e.currentTarget.dataset.section;
+      switchSection(target);
+    });
+  });
+
+  function switchSection(name) {
+    document.querySelectorAll('[id^="section-"]').forEach(s => s.classList.add('d-none'));
+    document.getElementById('section-' + name).classList.remove('d-none');
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelector(`[data-section="${name}"]`)?.classList.add('active');
+    document.getElementById('page-title').textContent =
+      name.charAt(0).toUpperCase() + name.slice(1);
+    if (name === 'dashboard')    loadDashboard();
+    if (name === 'doctors')      loadDoctors();
+    if (name === 'patients')     loadPatients();
+    if (name === 'appointments') loadAppointments();
+  }
+
+  // ── Dashboard ──
+  async function loadDashboard() {
+    try {
+      const stats = await get('/admin/dashboard');
+      document.getElementById('stats-row').innerHTML = `
+        ${statCard('bi-heart-pulse','text-success','bg-success','Total Doctors', stats.totalDoctors)}
+        ${statCard('bi-people','text-info','bg-info','Total Patients', stats.totalPatients)}
+        ${statCard('bi-calendar-check','text-warning','bg-warning','Total Appointments', stats.totalAppointments)}
+        ${statCard('bi-clock','text-danger','bg-danger','Pending', stats.pendingAppointments)}
+        ${statCard('bi-check-circle','text-primary','bg-primary','Approved', stats.approvedAppointments)}
+        ${statCard('bi-star','text-secondary','bg-secondary','Completed', stats.completedAppointments)}
+      `;
+      const appts = await get('/admin/appointments');
+      const recent = appts.slice(0, 8);
+      document.getElementById('recent-appointments-tbody').innerHTML = recent.map(a => `
+        <tr>
+          <td>${a.patientName}</td>
+          <td>Dr. ${a.doctorName}<br><small class="text-muted">${a.doctorSpecialization}</small></td>
+          <td>${a.appointmentDate}<br><small class="text-muted">${a.appointmentTime}</small></td>
+          <td>${statusBadge(a.status)}</td>
+        </tr>
+      `).join('');
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  function statCard(icon, textColor, bgColor, label, value) {
+    return `
+      <div class="col-6 col-md-4 col-xl-2">
+        <div class="card stat-card h-100">
+          <div class="card-body p-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div class="icon-box ${bgColor} bg-opacity-15">
+                <i class="bi ${icon} ${textColor}"></i>
+              </div>
+            </div>
+            <div class="fs-4 fw-bold">${value}</div>
+            <div class="text-muted" style="font-size:.8rem">${label}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── Doctors ──
+  async function loadDoctors() {
+    try {
+      const doctors = await get('/admin/doctors');
+      document.getElementById('doctors-tbody').innerHTML = doctors.map((d, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>
+            <div class="fw-semibold">Dr. ${d.firstName} ${d.lastName}</div>
+            <small class="text-muted">${d.qualification || ''}</small>
+          </td>
+          <td>${d.specialization || '—'}</td>
+          <td>${d.email}</td>
+          <td>₹${d.consultationFee || 0}</td>
+          <td><span class="badge ${d.active ? 'bg-success' : 'bg-secondary'}">${d.active ? 'Active' : 'Inactive'}</span></td>
+          <td>
+            <button class="btn btn-sm ${d.active ? 'btn-outline-danger' : 'btn-outline-success'}"
+              onclick="toggleDoctor(${d.id}, ${d.active})">
+              <i class="bi bi-${d.active ? 'x-circle' : 'check-circle'}"></i>
+              ${d.active ? 'Deactivate' : 'Activate'}
+            </button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" class="text-center text-muted py-4">No doctors found</td></tr>';
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  async function toggleDoctor(id, isActive) {
+    const action = isActive ? 'deactivate' : 'activate';
+    if (!confirm(`Are you sure you want to ${action} this doctor?`)) return;
+    try {
+      await put(`/admin/doctors/${id}/${action}`);
+      showToast(`Doctor ${action}d successfully`);
+      loadDoctors();
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  document.getElementById('add-doctor-btn').addEventListener('click', async () => {
+    const alertEl = document.getElementById('add-doctor-alert');
+    alertEl.classList.add('d-none');
+    try {
+      await post('/admin/doctors', {
+        firstName: document.getElementById('d-firstName').value.trim(),
+        lastName:  document.getElementById('d-lastName').value.trim(),
+        username:  document.getElementById('d-username').value.trim(),
+        email:     document.getElementById('d-email').value.trim(),
+        phone:     document.getElementById('d-phone').value.trim(),
+        password:  document.getElementById('d-password').value,
+        roles:     ['doctor']
+      });
+      bootstrap.Modal.getInstance(document.getElementById('addDoctorModal')).hide();
+      document.getElementById('add-doctor-form').reset();
+      showToast('Doctor added successfully!');
+      loadDoctors();
+    } catch(err) {
+      alertEl.textContent = err.message;
+      alertEl.className = 'alert alert-danger';
+      alertEl.classList.remove('d-none');
+    }
+  });
+
+  // ── Patients ──
+  async function loadPatients() {
+    try {
+      const patients = await get('/admin/patients');
+      document.getElementById('patients-tbody').innerHTML = patients.map((p, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${p.user?.firstName || ''} ${p.user?.lastName || ''}</td>
+          <td>${p.user?.email || ''}</td>
+          <td>${p.user?.phone || '—'}</td>
+          <td><span class="badge bg-danger bg-opacity-75">${p.bloodGroup || '—'}</span></td>
+          <td>${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">No patients found</td></tr>';
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  // ── All Appointments ──
+  async function loadAppointments() {
+    try {
+      const appts = await get('/admin/appointments');
+      document.getElementById('appointments-tbody').innerHTML = appts.map((a, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${a.patientName}</td>
+          <td>Dr. ${a.doctorName}<br><small class="text-muted">${a.doctorSpecialization}</small></td>
+          <td>${a.appointmentDate}<br><small class="text-muted">${a.appointmentTime}</small></td>
+          <td style="max-width:160px"><small>${a.reasonForVisit || '—'}</small></td>
+          <td>${statusBadge(a.status)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">No appointments found</td></tr>';
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  // Sidebar toggle (mobile)
+  document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+
+  // Boot
+  loadDashboard();
+</script>
+</body>
+</html>

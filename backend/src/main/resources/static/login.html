@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – Hospital Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="logo-circle"><i class="bi bi-hospital"></i></div>
+    <h4 class="text-center fw-bold mb-1">Hospital Management</h4>
+    <p class="text-center text-muted mb-4" style="font-size:.875rem">Sign in to your account</p>
+
+    <div id="alert-box" class="alert alert-danger d-none" role="alert"></div>
+
+    <!-- NOTE: NO action attribute, NO method attribute — pure JS submit -->
+    <div id="login-form">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Username</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person"></i></span>
+          <input type="text" id="username" class="form-control" placeholder="Enter username" autocomplete="username"/>
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Password</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock"></i></span>
+          <input type="password" id="password" class="form-control" placeholder="Enter password" autocomplete="current-password"/>
+          <button class="btn btn-outline-secondary" type="button" id="toggle-pwd">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary w-100 py-2 mb-3" id="login-btn">
+        <span id="btn-text">Sign In</span>
+        <span id="btn-spinner" class="spinner-border spinner-border-sm d-none ms-2" role="status"></span>
+      </button>
+    </div>
+
+    <div class="text-center">
+      <span class="text-muted" style="font-size:.875rem">Don't have an account?</span>
+      <a href="register.html" class="text-primary fw-semibold ms-1">Register</a>
+    </div>
+
+    <div class="mt-4 p-3 rounded-3" style="background:#f0f4ff;font-size:.8rem">
+      <p class="fw-bold mb-2 text-primary"><i class="bi bi-info-circle me-1"></i>Demo Credentials</p>
+      <div class="row g-1">
+        <div class="col-4">
+          <div class="p-2 bg-white rounded text-center" style="cursor:pointer" onclick="fillCreds('admin','Admin@123')">
+            <div class="fw-semibold">Admin</div>
+            <div class="text-muted">admin / Admin@123</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 bg-white rounded text-center">
+            <div class="fw-semibold">Doctor</div>
+            <div class="text-muted">Register first</div>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="p-2 bg-white rounded text-center">
+            <div class="fw-semibold">Patient</div>
+            <div class="text-muted">Register first</div>
+          </div>
+        </div>
+      </div>
+      <p class="mt-2 mb-0 text-muted" style="font-size:.75rem"><i class="bi bi-hand-index me-1"></i>Click Admin card to auto-fill</p>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  /* ── Minimal inline Auth (no dependency on app.js for login) ── */
+  const AuthHelper = {
+    save(data) { localStorage.setItem('hms_user', JSON.stringify(data)); },
+    get()      { return JSON.parse(localStorage.getItem('hms_user') || 'null'); },
+    role()     {
+      const roles = AuthHelper.get()?.roles || [];
+      if (roles.includes('ROLE_ADMIN'))   return 'ADMIN';
+      if (roles.includes('ROLE_DOCTOR'))  return 'DOCTOR';
+      if (roles.includes('ROLE_PATIENT')) return 'PATIENT';
+      return null;
+    }
+  };
+
+  function redirectByRole() {
+    const role = AuthHelper.role();
+    if (role === 'ADMIN')  { window.location.href = 'admin-dashboard.html'; return true; }
+    if (role === 'DOCTOR') { window.location.href = 'doctor-dashboard.html'; return true; }
+    if (role === 'PATIENT'){ window.location.href = 'patient-dashboard.html'; return true; }
+    return false;
+  }
+
+  // Already logged in → skip login page
+  if (AuthHelper.get()) redirectByRole();
+
+  // Auto-fill demo credentials
+  function fillCreds(u, p) {
+    document.getElementById('username').value = u;
+    document.getElementById('password').value = p;
+  }
+
+  // Toggle password visibility
+  document.getElementById('toggle-pwd').addEventListener('click', function() {
+    const pwd  = document.getElementById('password');
+    const icon = this.querySelector('i');
+    if (pwd.type === 'password') { pwd.type = 'text';     icon.className = 'bi bi-eye-slash'; }
+    else                         { pwd.type = 'password'; icon.className = 'bi bi-eye'; }
+  });
+
+  // Allow Enter key on password field
+  document.getElementById('password').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('username').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('password').focus();
+  });
+
+  // Login button click
+  document.getElementById('login-btn').addEventListener('click', doLogin);
+
+  async function doLogin() {
+    const alertBox   = document.getElementById('alert-box');
+    const btnText    = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    const username   = document.getElementById('username').value.trim();
+    const password   = document.getElementById('password').value;
+
+    alertBox.classList.add('d-none');
+
+    if (!username || !password) {
+      alertBox.textContent = 'Please enter both username and password.';
+      alertBox.classList.remove('d-none');
+      return;
+    }
+
+    // Show spinner
+    btnText.textContent = 'Signing in…';
+    btnSpinner.classList.remove('d-none');
+    document.getElementById('login-btn').disabled = true;
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid username or password.');
+      }
+
+      // Save token and user info
+      AuthHelper.save(data);
+
+      // Show success feedback
+      alertBox.textContent = '✓ Login successful! Redirecting…';
+      alertBox.className = 'alert alert-success';
+      alertBox.classList.remove('d-none');
+
+      setTimeout(() => redirectByRole(), 700);
+
+    } catch (err) {
+      alertBox.textContent = err.message || 'Login failed. Please try again.';
+      alertBox.className = 'alert alert-danger';
+      alertBox.classList.remove('d-none');
+    } finally {
+      btnText.textContent = 'Sign In';
+      btnSpinner.classList.add('d-none');
+      document.getElementById('login-btn').disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register – Hospital Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div class="auth-wrapper py-4">
+  <div class="auth-card" style="max-width:560px">
+    <div class="logo-circle"><i class="bi bi-person-plus"></i></div>
+    <h4 class="text-center fw-bold mb-1">Create Account</h4>
+    <p class="text-center text-muted mb-4" style="font-size:.875rem">Fill in the details to register</p>
+
+    <div id="alert-box" class="alert d-none" role="alert"></div>
+
+    <!-- Role selector -->
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Register As</label>
+      <div class="d-flex gap-3">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="role" id="role-patient" value="patient" checked/>
+          <label class="form-check-label" for="role-patient"><i class="bi bi-person-heart me-1 text-primary"></i>Patient</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="role" id="role-doctor" value="doctor"/>
+          <label class="form-check-label" for="role-doctor"><i class="bi bi-heart-pulse me-1 text-success"></i>Doctor</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-6">
+        <label class="form-label fw-semibold">First Name *</label>
+        <input type="text" id="firstName" class="form-control" placeholder="John"/>
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-semibold">Last Name *</label>
+        <input type="text" id="lastName" class="form-control" placeholder="Doe"/>
+      </div>
+      <div class="col-12">
+        <label class="form-label fw-semibold">Username * <small class="text-muted">(min 3 chars)</small></label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-at"></i></span>
+          <input type="text" id="username" class="form-control" placeholder="johndoe"/>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label fw-semibold">Email Address *</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+          <input type="email" id="email" class="form-control" placeholder="john@email.com"/>
+        </div>
+      </div>
+      <div class="col-12">
+        <label class="form-label fw-semibold">Phone Number</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-phone"></i></span>
+          <input type="tel" id="phone" class="form-control" placeholder="9876543210"/>
+        </div>
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-semibold">Password * <small class="text-muted">(min 6)</small></label>
+        <input type="password" id="password" class="form-control" placeholder="Min 6 chars"/>
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-semibold">Confirm Password *</label>
+        <input type="password" id="confirmPassword" class="form-control" placeholder="Re-enter"/>
+      </div>
+    </div>
+
+    <!-- Password strength -->
+    <div class="mt-2 mb-3">
+      <div class="progress" style="height:4px">
+        <div id="pwd-strength" class="progress-bar" style="width:0%;transition:width .3s"></div>
+      </div>
+      <small id="pwd-hint" class="text-muted"></small>
+    </div>
+
+    <button type="button" class="btn btn-primary w-100 py-2 mb-3" id="reg-btn">
+      <span id="btn-text">Create Account</span>
+      <span id="btn-spinner" class="spinner-border spinner-border-sm d-none ms-2" role="status"></span>
+    </button>
+
+    <div class="text-center">
+      <span class="text-muted" style="font-size:.875rem">Already have an account?</span>
+      <a href="login.html" class="text-primary fw-semibold ms-1">Sign In</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Password strength meter
+  document.getElementById('password').addEventListener('input', function() {
+    const v = this.value;
+    let s = 0;
+    if (v.length >= 6)  s += 25;
+    if (v.length >= 10) s += 25;
+    if (/[A-Z]/.test(v)) s += 25;
+    if (/[0-9!@#$%^&*]/.test(v)) s += 25;
+    const bar  = document.getElementById('pwd-strength');
+    const hint = document.getElementById('pwd-hint');
+    bar.style.width = s + '%';
+    if (s <= 25) { bar.className = 'progress-bar bg-danger';  hint.textContent = 'Weak'; }
+    else if (s <= 50) { bar.className = 'progress-bar bg-warning'; hint.textContent = 'Fair'; }
+    else if (s <= 75) { bar.className = 'progress-bar bg-info';    hint.textContent = 'Good'; }
+    else               { bar.className = 'progress-bar bg-success'; hint.textContent = 'Strong ✓'; }
+  });
+
+  document.getElementById('reg-btn').addEventListener('click', doRegister);
+
+  async function doRegister() {
+    const alertBox   = document.getElementById('alert-box');
+    const btnText    = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    alertBox.classList.add('d-none');
+
+    // Collect values
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName  = document.getElementById('lastName').value.trim();
+    const username  = document.getElementById('username').value.trim();
+    const email     = document.getElementById('email').value.trim();
+    const phone     = document.getElementById('phone').value.trim();
+    const password  = document.getElementById('password').value;
+    const confirm   = document.getElementById('confirmPassword').value;
+    const role      = document.querySelector('input[name="role"]:checked').value;
+
+    // Validate
+    if (!firstName || !lastName || !username || !email || !password) {
+      showAlert('Please fill in all required fields.', 'danger'); return;
+    }
+    if (username.length < 3) {
+      showAlert('Username must be at least 3 characters.', 'danger'); return;
+    }
+    if (password.length < 6) {
+      showAlert('Password must be at least 6 characters.', 'danger'); return;
+    }
+    if (password !== confirm) {
+      showAlert('Passwords do not match!', 'danger'); return;
+    }
+
+    btnText.textContent = 'Creating account…';
+    btnSpinner.classList.remove('d-none');
+    document.getElementById('reg-btn').disabled = true;
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, username, email, phone, password, roles: [role] })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Registration failed.');
+
+      showAlert('✓ Account created successfully! Redirecting to login…', 'success');
+      setTimeout(() => window.location.href = 'login.html', 1500);
+
+    } catch (err) {
+      showAlert(err.message || 'Registration failed. Please try again.', 'danger');
+    } finally {
+      btnText.textContent = 'Create Account';
+      btnSpinner.classList.add('d-none');
+      document.getElementById('reg-btn').disabled = false;
+    }
+  }
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert-box');
+    el.textContent = msg;
+    el.className = 'alert alert-' + type;
+    el.classList.remove('d-none');
+  }
+</script>
+</body>
+</html>

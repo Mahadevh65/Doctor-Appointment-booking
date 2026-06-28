@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hospital Appointment Management System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"/>
+  <style>
+    body { margin: 0; background: linear-gradient(135deg, #1a237e 0%, #1565c0 50%, #0288d1 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
+    .landing-card { background: #fff; border-radius: 20px; padding: 3rem 2.5rem; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.35); }
+    .logo { width: 90px; height: 90px; background: linear-gradient(135deg,#1a237e,#0288d1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2.5rem; color: #fff; }
+    .feature-badge { display: inline-flex; align-items: center; gap: .4rem; background: #f0f4ff; color: #1a237e; border-radius: 20px; padding: .3rem .9rem; font-size: .8rem; font-weight: 600; margin: .2rem; }
+  </style>
+</head>
+<body>
+<div class="landing-card">
+  <div class="logo"><i class="bi bi-hospital"></i></div>
+  <h2 class="fw-bold mb-1" style="color:#1a237e">Hospital Management</h2>
+  <p class="text-muted mb-4">Appointment Management System</p>
+
+  <div class="mb-4">
+    <span class="feature-badge"><i class="bi bi-shield-check"></i>JWT Secured</span>
+    <span class="feature-badge"><i class="bi bi-people"></i>Role-Based Access</span>
+    <span class="feature-badge"><i class="bi bi-calendar-check"></i>Easy Booking</span>
+    <span class="feature-badge"><i class="bi bi-file-medical"></i>Prescriptions</span>
+  </div>
+
+  <div class="d-grid gap-2">
+    <a href="login.html" class="btn btn-primary btn-lg"><i class="bi bi-box-arrow-in-right me-2"></i>Sign In</a>
+    <a href="register.html" class="btn btn-outline-primary btn-lg"><i class="bi bi-person-plus me-2"></i>Create Account</a>
+  </div>
+
+  <div class="mt-4 p-3 rounded-3" style="background:#f8f9fa;font-size:.8rem;color:#6c757d">
+    <div class="fw-semibold mb-1">Default Admin</div>
+    <div>Username: <strong>admin</strong> &nbsp;|&nbsp; Password: <strong>Admin@123</strong></div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  // Auto-redirect if already logged in
+  const user = Auth.get();
+  if (user) {
+    const role = Auth.role();
+    if (role === 'ADMIN')  location.href = 'admin-dashboard.html';
+    else if (role === 'DOCTOR') location.href = 'doctor-dashboard.html';
+    else location.href = 'patient-dashboard.html';
+  }
+</script>
+</body>
+</html>
