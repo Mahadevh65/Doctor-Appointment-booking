@@ -6,6 +6,7 @@ import com.hospital.management.dto.response.AppointmentResponse;
 import com.hospital.management.dto.response.DashboardStatsResponse;
 import com.hospital.management.dto.response.DoctorResponse;
 import com.hospital.management.dto.response.MessageResponse;
+import com.hospital.management.dto.response.PatientResponse;
 import com.hospital.management.entity.Patient;
 import com.hospital.management.service.*;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.hospital.management.dto.response.PatientResponse;
 
 import java.util.List;
 
@@ -23,11 +25,11 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
 
-    private final AdminService       adminService;
-    private final DoctorService      doctorService;
-    private final PatientService     patientService;
+    private final AdminService adminService;
+    private final DoctorService doctorService;
+    private final PatientService patientService;
     private final AppointmentService appointmentService;
-    private final AuthService        authService;
+    private final AuthService authService;
 
     // Dashboard
     @GetMapping("/dashboard")
@@ -41,12 +43,12 @@ public class AdminController {
         return ResponseEntity.ok(doctorService.getAllDoctors());
     }
 
-    @PostMapping("/doctors")
-    public ResponseEntity<MessageResponse> addDoctor(
-            @Valid @RequestBody RegisterRequest req) {
-        req.setRoles(java.util.Set.of("doctor"));
-        return ResponseEntity.ok(authService.registerUser(req));
-    }
+    // @PostMapping("/doctors")
+    // public ResponseEntity<MessageResponse> addDoctor(
+    // @Valid @RequestBody RegisterRequest req) {
+    // req.setRoles(java.util.Set.of("doctor"));
+    // return ResponseEntity.ok(authService.registerUser(req));
+    // }
 
     @PutMapping("/doctors/{id}/deactivate")
     public ResponseEntity<MessageResponse> deactivateDoctor(@PathVariable Long id) {
@@ -67,8 +69,13 @@ public class AdminController {
     }
 
     // Patients management
+    // @GetMapping("/patients")
+    // public ResponseEntity<List<Patient>> getAllPatients() {
+    // return ResponseEntity.ok(patientService.getAllPatients());
+    // }
+
     @GetMapping("/patients")
-    public ResponseEntity<List<Patient>> getAllPatients() {
+    public ResponseEntity<List<PatientResponse>> getAllPatients() {
         return ResponseEntity.ok(patientService.getAllPatients());
     }
 

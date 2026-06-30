@@ -1,6 +1,8 @@
 package com.hospital.management.controller;
 
+import com.hospital.management.dto.request.DoctorRegisterRequest;
 import com.hospital.management.dto.request.LoginRequest;
+import com.hospital.management.dto.request.PatientRegisterRequest;
 import com.hospital.management.dto.request.RegisterRequest;
 import com.hospital.management.dto.response.JwtResponse;
 import com.hospital.management.dto.response.MessageResponse;
@@ -9,6 +11,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.hospital.management.dto.request.DoctorRegisterRequest;
+import com.hospital.management.dto.request.PatientRegisterRequest;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,9 +28,17 @@ public class AuthController {
         return ResponseEntity.ok(authService.authenticateUser(loginRequest));
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<MessageResponse> registerUser(
-            @Valid @RequestBody RegisterRequest signUpRequest) {
-        return ResponseEntity.ok(authService.registerUser(signUpRequest));
+    @PostMapping("/register/doctor")
+    public ResponseEntity<MessageResponse> registerDoctor(
+            @Valid @RequestBody DoctorRegisterRequest request) {
+
+        return ResponseEntity.ok(authService.registerDoctor(request));
+    }
+
+    @PostMapping("/register/patient")
+    public ResponseEntity<MessageResponse> registerPatient(
+            @Valid @RequestBody PatientRegisterRequest request) {
+
+        return ResponseEntity.ok(authService.registerPatient(request));
     }
 }

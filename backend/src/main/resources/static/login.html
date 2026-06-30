@@ -178,6 +178,81 @@
       document.getElementById('login-btn').disabled = false;
     }
   }
+
+
+  /*async function doLogin() {
+
+    const alertBox = document.getElementById("alert-box");
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+
+        console.log("STEP 1 : Login Started");
+
+        const response = await fetch("http://localhost:8082/api/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        });
+
+        console.log("STEP 2 : Response =", response.status);
+
+        const data = await response.json();
+
+        console.log("STEP 3 : Response Data =", data);
+
+        if (!response.ok) {
+            throw new Error(data.message);
+        }
+
+        localStorage.setItem("hms_user", JSON.stringify(data));
+
+        console.log("STEP 4 : Saved");
+
+        console.log(localStorage.getItem("hms_user"));
+
+        if (data.roles.includes("ROLE_ADMIN")) {
+
+            console.log("Redirect Admin");
+
+            window.location.href = "admin-dashboard.html";
+        }
+
+        else if (data.roles.includes("ROLE_DOCTOR")) {
+
+            console.log("Redirect Doctor");
+
+            window.location.href = "doctor-dashboard.html";
+        }
+
+        else if (data.roles.includes("ROLE_PATIENT")) {
+
+            console.log("Redirect Patient");
+
+            window.location.href = "patient-dashboard.html";
+        }
+
+    }
+
+    catch (e) {
+
+        console.log("ERROR =", e);
+
+        alertBox.className = "alert alert-danger";
+
+        alertBox.innerHTML = e.message;
+
+        alertBox.classList.remove("d-none");
+
+    }
+
+}*/
 </script>
 </body>
 </html>
