@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Consultation Chat - Hospital Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body class="chat-page">
+  <div class="chat-shell">
+    <div class="chat-card">
+      <div class="chat-header">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-sm btn-outline-secondary" id="back-btn"><i class="bi bi-arrow-left"></i></button>
+          <div><div class="fw-bold" id="chat-doctor-name">Doctor</div><small class="text-muted">Online consultation</small></div>
+        </div>
+        <button class="btn btn-sm btn-outline-primary" id="refresh-btn"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+      </div>
+      <div class="chat-messages" id="chat-messages"><div class="text-center text-muted py-5">Loading conversation...</div></div>
+      <form class="chat-input" id="patient-chat-form">
+        <input type="text" class="form-control" id="patient-message" placeholder="Type your message..." autocomplete="off"/>
+        <button class="btn btn-success" type="submit"><i class="bi bi-send"></i></button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if (!Auth.requireRole('PATIENT')) throw new Error('Unauthorized');
+    const doctorId = localStorage.getItem('consult_doctor_id');
+    const doctorName = localStorage.getItem('consult_doctor_name') || 'Doctor';
+    document.getElementById('chat-doctor-name').textContent = doctorName;
+    if (!doctorId) { showToast('Please select a doctor first.', 'warning'); setTimeout(() => window.location.href = '/patient-dashboard.html', 1200); }
+    document.getElementById('back-btn').addEventListener('click', () => { window.location.href = '/patient-dashboard.html'; });
+    document.getElementById('refresh-btn').addEventListener('click', loadConversation);
+    async function loadConversation() {
+      if (!doctorId) return;
+      try { const messages = await MessageAPI.conversation({ doctorId }); renderConversation(Array.isArray(messages) ? messages : []); }
+      catch(err) { showToast(err.message, 'danger'); }
+    }
+    function renderConversation(messages) {
+      const box = document.getElementById('chat-messages');
+      box.innerHTML = messages.map(m => {
+        const role = messageSenderRole(m);
+        const mine = role.includes('PATIENT') || m.fromPatient === true;
+        return `<div class="message-row ${mine ? 'mine' : 'theirs'}"><div class="message-bubble"><div>${escapeHtml(messageText(m))}</div><small>${escapeHtml(messageTime(m))}</small></div></div>`;
+      }).join('') || '<div class="text-center text-muted py-5">No messages yet. Start the consultation.</div>';
+      box.scrollTop = box.scrollHeight;
+    }
+    document.getElementById('patient-chat-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('patient-message');
+      const text = input.value.trim();
+      if (!text || !doctorId) return;
+      try { await MessageAPI.patientSend(doctorId, text); input.value = ''; await loadConversation(); }
+      catch(err) { showToast(err.message, 'danger'); }
+    });
+    loadConversation();
+    setInterval(loadConversation, 15000);
+  </script>
+</body>
+</html>

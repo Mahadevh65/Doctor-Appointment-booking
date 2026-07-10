@@ -23,3 +23,5 @@ Thumbs.db
 
 # Environment
 application-local.properties
+
+.env

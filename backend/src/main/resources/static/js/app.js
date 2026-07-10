@@ -97,6 +97,131 @@ function populateTopbar() {
   if (roleEl) roleEl.textContent = Auth.role();
 }
 
+
+/* ── Consultation message helpers ── */
+const MessageAPI = {
+  patientSend(doctorId, message) {
+    return post('/messages/patient/send', { doctorId: parseInt(doctorId), message: message });
+  },
+  doctorReply(patientId, message) {
+    return post('/messages/doctor/reply', { patientId: parseInt(patientId), message: message });
+  },
+  patientMessages() { return get('/messages/patient'); },
+  doctorMessages() { return get('/messages/doctor'); },
+  conversation(params) {
+
+    const query = new URLSearchParams();
+
+    if (params && params.doctorId) {
+        query.set("doctorId", params.doctorId);
+        return get("/messages/conversation?" + query.toString());
+    }
+
+    if (params && params.patientId) {
+        query.set("patientId", params.patientId);
+        return get("/messages/doctor/conversation?" + query.toString());
+    }
+
+    throw new Error("Invalid conversation parameters");
+}
+  // conversation(params) {
+  //   const query = new URLSearchParams();
+  //   if (params && params.doctorId) query.set('doctorId', params.doctorId);
+  //   if (params && params.patientId) query.set('patientId', params.patientId);
+  //   const suffix = query.toString() ? '?' + query.toString() : '';
+  //   return get('/messages/conversation' + suffix);
+  // }
+};
+
+function messageText(message) { return (message && (message.message || message.content || message.text || message.reply)) || ''; }
+
+function messageSenderRole(message) {
+    return (
+        (
+            message &&
+            (
+                message.sender ||
+                message.senderRole ||
+                message.role ||
+                message.sentBy
+            )
+        ) || ''
+    ).toString().toUpperCase();
+}
+// function messageSenderRole(message) { return ((message && (message.senderRole || message.role || message.sentBy)) || '').toString().toUpperCase(); }
+function messageTime(message) {
+  const raw = message && (message.createdAt || message.sentAt || message.timestamp || message.dateTime);
+  if (!raw) return '';
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return raw;
+  return date.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+/* ── Payment helpers ── */
+const PaymentAPI = {
+  pay(doctorId, amount, paymentMethod) {
+    return post('/payment/pay', {
+      doctorId: parseInt(doctorId),
+      amount: parseFloat(amount),
+      paymentMethod: paymentMethod
+    });
+  },
+  history() {
+    return get('/payment/history');
+  },
+  details(paymentId) {
+    return get('/payment/' + paymentId);
+  }
+};
+
+function formatCurrency(amount) {
+  const value = Number(amount || 0);
+  return '₹' + value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDateTime(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function paymentStatusBadge(status) {
+  const value = (status || 'PENDING').toString().toUpperCase();
+  const map = {
+    SUCCESS: 'bg-success',
+    PENDING: 'bg-warning text-dark',
+    FAILED: 'bg-danger',
+    REFUNDED: 'bg-info text-dark'
+  };
+  return '<span class="badge ' + (map[value] || 'bg-secondary') + '">' + value + '</span>';
+}
+
+function paymentMethodLabel(method) {
+  const value = (method || '').toString().toUpperCase();
+  const map = {
+    CARD: 'Card',
+    UPI: 'UPI',
+    CASH: 'Cash',
+    NET_BANKING: 'Net Banking'
+  };
+  return map[value] || value || '—';
+}
+
 /* ── Animations ── */
 (function injectStyles() {
   const s = document.createElement('style');

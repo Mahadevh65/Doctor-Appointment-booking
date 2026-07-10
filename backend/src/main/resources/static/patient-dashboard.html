@@ -22,6 +22,7 @@
     <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
     <li class="nav-item"><a href="#" class="nav-link" data-section="doctors"><i class="bi bi-heart-pulse"></i>Find Doctors</a></li>
     <li class="nav-item"><a href="#" class="nav-link" data-section="appointments"><i class="bi bi-calendar-check"></i>My Appointments</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="payments"><i class="bi bi-credit-card"></i>Payment History</a></li>
     <li class="nav-item"><a href="#" class="nav-link" data-section="profile"><i class="bi bi-person-gear"></i>My Profile</a></li>
   </ul>
   <div class="sidebar-footer"><i class="bi bi-person-heart me-1"></i>Patient Portal</div>
@@ -145,6 +146,15 @@
       </div>
     </section>
 
+    <!-- ── PAYMENT HISTORY ── -->
+    <section id="section-payments" class="d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0"><i class="bi bi-credit-card me-2 text-success"></i>Payment History</h5>
+        <button class="btn btn-sm btn-outline-primary" onclick="loadPaymentHistory()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+      </div>
+      <div id="payment-success-alert" class="payment-success-banner mb-4 d-none"><i class="bi bi-check-circle-fill me-2"></i>Payment Successful. Appointment Booked Successfully.</div>
+      <div class="card table-card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Transaction ID</th><th>Doctor</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th><th>Receipt</th></tr></thead><tbody id="payment-history-tbody"></tbody></table></div></div></div>
+    </section>
     <!-- ── MY PROFILE ── -->
     <section id="section-profile" class="d-none">
       <div class="mb-4"><h5 class="fw-bold mb-0"><i class="bi bi-person-gear me-2 text-primary"></i>My Profile</h5></div>
@@ -217,6 +227,9 @@
           </div>
         </div>
         <input type="hidden" id="book-doctor-id"/>
+        <input type="hidden" id="book-doctor-name-raw"/>
+        <input type="hidden" id="book-doctor-spec-raw"/>
+        <input type="hidden" id="book-doctor-fee-raw"/>
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label fw-semibold">Appointment Date *</label>
@@ -246,6 +259,8 @@
   </div>
 </div>
 
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Payment Receipt</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="receipt-print-area" class="receipt-card p-4 bg-white"><div class="text-center mb-4"><div class="receipt-logo mb-2"><i class="bi bi-hospital"></i></div><h4 class="fw-bold mb-0">Hospital Management System</h4><div class="text-muted small">Official Payment Receipt</div></div><div class="row g-3"><div class="col-md-6"><div class="receipt-line"><span>Patient Name</span><span id="r-patient-name">—</span></div></div><div class="col-md-6"><div class="receipt-line"><span>Doctor Name</span><span id="r-doctor-name">—</span></div></div><div class="col-md-6"><div class="receipt-line"><span>Amount</span><span id="r-amount">—</span></div></div><div class="col-md-6"><div class="receipt-line"><span>Transaction ID</span><span id="r-transaction">—</span></div></div><div class="col-md-6"><div class="receipt-line"><span>Payment Method</span><span id="r-method">—</span></div></div><div class="col-md-6"><div class="receipt-line"><span>Date</span><span id="r-date">—</span></div></div><div class="col-md-6"><div class="receipt-line"><span>Status</span><span id="r-status">—</span></div></div></div></div></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" onclick="printReceipt()"><i class="bi bi-printer me-1"></i>Print</button><button type="button" class="btn btn-primary" onclick="downloadReceipt()"><i class="bi bi-download me-1"></i>Download Receipt</button></div></div></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script src="js/app.js"></script>
 <script>
@@ -257,6 +272,9 @@
 
   let allMyAppointments = [];
   let currentFilter = 'ALL';
+  let paymentHistory = [];
+  let paymentDoctorMap = {};
+  let currentReceiptPayment = null;
 
   // Navigation
   document.querySelectorAll('[data-section]').forEach(link => {
@@ -275,6 +293,7 @@
     if (name === 'dashboard')    loadDashboard();
     if (name === 'doctors')      loadDoctors();
     if (name === 'appointments') loadMyAppointments();
+    if (name === 'payments')     loadPaymentHistory();
     if (name === 'profile')      loadProfile();
   }
 
@@ -337,9 +356,14 @@
             </div>
             ${d.department ? `<div class="badge bg-info bg-opacity-15 text-info mb-2">${d.department}</div>` : ''}
             ${d.availableDays ? `<div class="text-muted small mb-3"><i class="bi bi-calendar3 me-1"></i>${d.availableDays}</div>` : ''}
-            <button class="btn btn-primary btn-sm w-100" onclick="openBookModal(${d.id},'${d.firstName} ${d.lastName}','${d.specialization}',${d.consultationFee})">
-              <i class="bi bi-calendar-plus me-1"></i>Book Appointment
-            </button>
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary btn-sm" onclick="openBookModal(${d.id},'${d.firstName} ${d.lastName}','${d.specialization}',${d.consultationFee})">
+                <i class="bi bi-calendar-plus me-1"></i>Book Appointment
+              </button>
+              <button class="btn btn-outline-success btn-sm" onclick="openConsultDoctor(${d.id},'Dr. ${d.firstName} ${d.lastName}')">
+                <i class="bi bi-chat-dots me-1"></i>Consult Doctor
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -353,9 +377,19 @@
     if (e.key === 'Enter') loadDoctors(e.target.value.trim());
   });
 
+
+  function openConsultDoctor(doctorId, doctorName) {
+    localStorage.setItem('consult_doctor_id', doctorId);
+    localStorage.setItem('consult_doctor_name', doctorName);
+    window.location.href = '/chat.html';
+  }
+
   // ── Book Appointment ──
   function openBookModal(doctorId, name, spec, fee) {
     document.getElementById('book-doctor-id').value    = doctorId;
+    document.getElementById('book-doctor-name-raw').value = name;
+    document.getElementById('book-doctor-spec-raw').value = spec;
+    document.getElementById('book-doctor-fee-raw').value = fee;
     document.getElementById('book-doctor-name').textContent = `Dr. ${name}`;
     document.getElementById('book-doctor-spec').textContent = spec;
     document.getElementById('book-doctor-fee').textContent  = `Consultation Fee: ₹${fee}`;
@@ -369,7 +403,7 @@
     new bootstrap.Modal(document.getElementById('bookModal')).show();
   }
 
-  document.getElementById('confirm-book-btn').addEventListener('click', async () => {
+  document.getElementById('confirm-book-btn').addEventListener('click', () => {
     const alertEl = document.getElementById('book-alert');
     alertEl.classList.add('d-none');
     const date = document.getElementById('book-date').value;
@@ -380,22 +414,18 @@
       alertEl.classList.remove('d-none');
       return;
     }
-    try {
-      await post('/patient/appointments/book', {
-        doctorId:       parseInt(document.getElementById('book-doctor-id').value),
-        appointmentDate: date,
-        appointmentTime: time,
-        reasonForVisit: document.getElementById('book-reason').value,
-        symptoms:       document.getElementById('book-symptoms').value
-      });
-      bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
-      showToast('Appointment booked successfully!');
-      loadDashboard();
-    } catch(err) {
-      alertEl.textContent = err.message;
-      alertEl.className = 'alert alert-danger';
-      alertEl.classList.remove('d-none');
-    }
+    const pendingAppointment = {
+      doctorId: parseInt(document.getElementById('book-doctor-id').value),
+      doctorName: document.getElementById('book-doctor-name-raw').value,
+      doctorSpecialization: document.getElementById('book-doctor-spec-raw').value,
+      consultationFee: parseFloat(document.getElementById('book-doctor-fee-raw').value) || 0,
+      appointmentDate: date,
+      appointmentTime: time,
+      reasonForVisit: document.getElementById('book-reason').value,
+      symptoms: document.getElementById('book-symptoms').value
+    };
+    localStorage.setItem('pending_payment_appointment', JSON.stringify(pendingAppointment));
+    window.location.href = '/payment.html';
   });
 
   // ── My Appointments ──
@@ -450,6 +480,62 @@
     } catch(err) { showToast(err.message, 'danger'); }
   }
 
+
+  // ── Payment History ──
+  async function loadPaymentHistory() {
+    const tbody = document.getElementById('payment-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Loading payments...</td></tr>';
+    try {
+      await loadPaymentDoctorMap();
+      paymentHistory = await PaymentAPI.history();
+      renderPaymentHistory();
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+  async function loadPaymentDoctorMap() {
+    try {
+      const doctors = await get('/doctors/list');
+      paymentDoctorMap = {};
+      doctors.forEach(d => { paymentDoctorMap[d.id] = `Dr. ${d.firstName || ''} ${d.lastName || ''}`.trim(); });
+    } catch(err) { paymentDoctorMap = {}; }
+  }
+  function renderPaymentHistory() {
+    const tbody = document.getElementById('payment-history-tbody');
+    tbody.innerHTML = paymentHistory.map(p => `
+      <tr><td><span class="fw-semibold">${escapeHtml(p.transactionId || '—')}</span></td><td>${escapeHtml(paymentDoctorMap[p.doctorId] || ('Doctor #' + (p.doctorId || '—')))}</td><td>${formatCurrency(p.amount)}</td><td>${paymentMethodLabel(p.paymentMethod)}</td><td>${paymentStatusBadge(p.paymentStatus)}</td><td>${formatDateTime(p.paymentDate)}</td><td><button class="btn btn-sm btn-outline-primary" onclick="openReceipt(${p.id})"><i class="bi bi-receipt me-1"></i>Receipt</button></td></tr>
+    `).join('') || '<tr><td colspan="7" class="text-center text-muted py-4">No payments found</td></tr>';
+  }
+  async function openReceipt(paymentId) {
+    try {
+      let payment = paymentHistory.find(p => p.id === paymentId);
+      if (!payment) payment = await PaymentAPI.details(paymentId);
+      currentReceiptPayment = payment;
+      const user = Auth.get() || {};
+      const patientName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Patient';
+      document.getElementById('r-patient-name').textContent = patientName;
+      document.getElementById('r-doctor-name').textContent = paymentDoctorMap[payment.doctorId] || ('Doctor #' + (payment.doctorId || '—'));
+      document.getElementById('r-amount').textContent = formatCurrency(payment.amount);
+      document.getElementById('r-transaction').textContent = payment.transactionId || '—';
+      document.getElementById('r-method').textContent = paymentMethodLabel(payment.paymentMethod);
+      document.getElementById('r-date').textContent = formatDateTime(payment.paymentDate);
+      document.getElementById('r-status').innerHTML = paymentStatusBadge(payment.paymentStatus);
+      new bootstrap.Modal(document.getElementById('receiptModal')).show();
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+  function printReceipt() { window.print(); }
+  function downloadReceipt() {
+    if (!currentReceiptPayment) return;
+    const user = Auth.get() || {};
+    const patientName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Patient';
+    const doctorName = paymentDoctorMap[currentReceiptPayment.doctorId] || ('Doctor #' + (currentReceiptPayment.doctorId || '—'));
+    const receipt = ['Hospital Management System - Payment Receipt','--------------------------------------------','Patient Name: ' + patientName,'Doctor Name: ' + doctorName,'Amount: ' + formatCurrency(currentReceiptPayment.amount),'Transaction ID: ' + (currentReceiptPayment.transactionId || '—'),'Payment Method: ' + paymentMethodLabel(currentReceiptPayment.paymentMethod),'Date: ' + formatDateTime(currentReceiptPayment.paymentDate),'Status: ' + (currentReceiptPayment.paymentStatus || '—')].join('\n');
+    const blob = new Blob([receipt], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'receipt-' + (currentReceiptPayment.transactionId || currentReceiptPayment.id || 'payment') + '.txt';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
   // ── Profile ──
   async function loadProfile() {
     try {
@@ -505,6 +591,13 @@
   });
 
   // Boot
+  const paymentMessage = localStorage.getItem('payment_success_message');
+  if (paymentMessage) {
+    localStorage.removeItem('payment_success_message');
+    showToast(paymentMessage, 'success');
+    const alertEl = document.getElementById('payment-success-alert');
+    if (alertEl) alertEl.classList.remove('d-none');
+  }
   loadDashboard();
 </script>
 </body>

@@ -206,3 +206,43 @@ body {
   border: 3px solid #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,.15);
 }
+
+
+/* ── Consultation Chat ── */
+.chat-page { min-height: 100vh; background: #eef2f7; display: flex; flex-direction: column; }
+.chat-shell { max-width: 980px; width: 100%; margin: 0 auto; flex: 1; display: flex; flex-direction: column; padding: 1rem; }
+.chat-card { border: none; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,.1); min-height: 620px; display: flex; flex-direction: column; }
+.chat-header { background: #fff; border-bottom: 1px solid #e9ecef; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 1rem; background: linear-gradient(180deg,#f7f9fc,#edf3f2); }
+.message-row { display: flex; margin-bottom: .75rem; }
+.message-row.mine { justify-content: flex-end; }
+.message-row.theirs { justify-content: flex-start; }
+.message-bubble { max-width: min(72%, 620px); border-radius: 14px; padding: .65rem .85rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); font-size: .92rem; }
+.message-row.mine .message-bubble { background: #d1f4df; border-bottom-right-radius: 4px; }
+.message-row.theirs .message-bubble { background: #fff; border-bottom-left-radius: 4px; }
+.message-bubble small { display: block; color: #6c757d; font-size: .7rem; margin-top: .25rem; text-align: right; }
+.chat-input { background: #fff; border-top: 1px solid #e9ecef; padding: .75rem; display: flex; gap: .5rem; }
+.chat-input .form-control { border-radius: 999px; }
+.chat-input .btn { width: 46px; height: 42px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+@media (max-width: 768px) { .chat-shell { padding: 0; } .chat-card { min-height: 100vh; border-radius: 0; } .message-bubble { max-width: 86%; } }
+
+
+/* ── Payment UI ── */
+.payment-page { min-height: 100vh; background: #eef2f7; }
+.payment-shell { max-width: 1120px; margin: 0 auto; padding: 1.5rem; }
+.payment-hero { background: linear-gradient(135deg, #0d6efd, #20c997); color: #fff; border-radius: 16px; padding: 1.25rem 1.5rem; box-shadow: 0 10px 30px rgba(13,110,253,.22); }
+.payment-summary-card, .payment-method-card, .receipt-card { border: none; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+.payment-detail-row { display: flex; justify-content: space-between; gap: 1rem; padding: .7rem 0; border-bottom: 1px solid #edf0f4; }
+.payment-detail-row:last-child { border-bottom: none; }
+.payment-detail-row span:first-child { color: #6c757d; }
+.payment-detail-row span:last-child { font-weight: 600; text-align: right; }
+.payment-method-option { border: 1.5px solid #dee2e6; border-radius: 12px; padding: .9rem 1rem; display: flex; align-items: center; gap: .85rem; cursor: pointer; transition: all .2s ease; background: #fff; }
+.payment-method-option:hover, .payment-method-option:has(input:checked) { border-color: #0d6efd; background: #f0f6ff; box-shadow: 0 6px 16px rgba(13,110,253,.12); }
+.payment-method-option i { width: 42px; height: 42px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: #e7f1ff; color: #0d6efd; font-size: 1.2rem; }
+.payment-success-banner { border-left: 4px solid #198754; background: #e9f8ef; color: #0f5132; border-radius: 10px; padding: .85rem 1rem; }
+.receipt-logo { width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg,#1a237e,#0288d1); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 1.8rem; }
+.receipt-line { display: flex; justify-content: space-between; gap: 1rem; padding: .6rem 0; border-bottom: 1px dashed #dee2e6; }
+.receipt-line span:first-child { color: #6c757d; }
+.receipt-line span:last-child { font-weight: 600; text-align: right; }
+@media print { body * { visibility: hidden; } #receipt-print-area, #receipt-print-area * { visibility: visible; } #receipt-print-area { position: absolute; left: 0; top: 0; width: 100%; } .modal-footer, .btn-close { display: none !important; } }
+@media (max-width: 768px) { .payment-shell { padding: .75rem; } .payment-hero { border-radius: 12px; } .payment-detail-row, .receipt-line { flex-direction: column; gap: .15rem; } .payment-detail-row span:last-child, .receipt-line span:last-child { text-align: left; } }

@@ -21,6 +21,7 @@
   <ul class="sidebar-nav list-unstyled">
     <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
     <li class="nav-item"><a href="#" class="nav-link" data-section="appointments"><i class="bi bi-calendar-check"></i>My Appointments</a></li>
+    <li class="nav-item"><a href="#" class="nav-link" data-section="messages"><i class="bi bi-chat-dots"></i>Messages <span class="badge bg-danger ms-auto d-none" id="messages-badge">0</span></a></li>
     <li class="nav-item"><a href="#" class="nav-link" data-section="profile"><i class="bi bi-person-gear"></i>My Profile</a></li>
   </ul>
   <div class="sidebar-footer"><i class="bi bi-heart-pulse me-1"></i>Doctor Portal</div>
@@ -83,6 +84,33 @@
               <thead><tr><th>#</th><th>Patient</th><th>Date & Time</th><th>Reason / Symptoms</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody id="appointments-tbody"></tbody>
             </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ── MESSAGES ── -->
+    <section id="section-messages" class="d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold mb-0"><i class="bi bi-chat-dots me-2 text-success"></i>Patient Messages</h5>
+        <button class="btn btn-sm btn-outline-primary" onclick="loadMessages()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card table-card h-100">
+            <div class="card-header bg-white py-3"><h6 class="mb-0 fw-bold">Conversations</h6></div>
+            <div class="list-group list-group-flush" id="doctor-message-list"></div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card chat-card h-100">
+            <div class="chat-header"><div><div class="fw-bold" id="doctor-chat-title">Select a patient</div><small class="text-muted">Consultation conversation</small></div></div>
+            <div class="chat-messages" id="doctor-chat-messages"><div class="text-center text-muted py-5">Open a patient conversation to reply.</div></div>
+            <form class="chat-input" id="doctor-reply-form">
+              <input type="text" class="form-control" id="doctor-reply-text" placeholder="Type your reply..." autocomplete="off" disabled/>
+              <button class="btn btn-success" type="submit" id="doctor-reply-btn" disabled><i class="bi bi-send"></i></button>
+            </form>
           </div>
         </div>
       </div>
@@ -192,7 +220,9 @@
     document.querySelector(`[data-section="${name}"]`)?.classList.add('active');
     document.getElementById('page-title').textContent = name.charAt(0).toUpperCase() + name.slice(1);
     if (name === 'dashboard')    loadDashboard();
+  loadMessages();
     if (name === 'appointments') loadMyAppointments();
+    if (name === 'messages')     loadMessages();
     if (name === 'profile')      loadProfile();
   }
 
@@ -245,6 +275,7 @@
       <button class="btn btn-sm btn-success me-1" onclick="approveAppt(${a.id})"><i class="bi bi-check"></i></button>
       <button class="btn btn-sm btn-danger" onclick="openReject(${a.id})"><i class="bi bi-x"></i></button>`;
     if (a.status === 'APPROVED') return `
+      <button class="btn btn-sm btn-outline-success me-1" onclick="openPatientConversationFromAppointment(${a.patientId || 0},'${a.patientName || ''}')"><i class="bi bi-chat-dots"></i></button>
       <button class="btn btn-sm btn-primary" onclick="openPrescription(${a.id})"><i class="bi bi-file-medical me-1"></i>Complete</button>`;
     return '—';
   }
@@ -308,6 +339,133 @@
       bootstrap.Modal.getInstance(document.getElementById('prescriptionModal')).hide();
       showToast('Prescription saved & appointment completed!');
       loadDashboard(); loadMyAppointments();
+    } catch(err) { showToast(err.message, 'danger'); }
+  });
+
+
+  let currentMessagePatientId = null;
+  let currentMessagePatientName = '';
+
+  async function loadMessages() {
+    try {
+      const messages = await MessageAPI.doctorMessages();
+      renderDoctorMessageThreads(Array.isArray(messages) ? messages : []);
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  function normalizePatientId(m) { return m.patientId || (m.patient && m.patient.id) || m.senderId || m.userId || m.fromUserId || 0; }
+  function normalizePatientName(m) { return m.patientName || (m.patient && m.patient.name) || m.senderName || m.fromName || 'Patient'; }
+
+  function renderDoctorMessageThreads(messages) {
+    const grouped = new Map();
+    messages.forEach(m => {
+      const patientId = normalizePatientId(m);
+      if (!patientId) return;
+      const current = grouped.get(patientId) || { patientId: patientId, patientName: normalizePatientName(m), latest: m, count: 0 };
+      current.latest = m;
+      if (m.read === false || m.status === 'UNREAD') current.count += 1;
+      grouped.set(patientId, current);
+    });
+    const threads = Array.from(grouped.values()).reverse();
+    const badge = document.getElementById('messages-badge');
+    const unread = threads.reduce((sum, t) => sum + t.count, 0);
+    if (badge) { badge.textContent = unread; badge.classList.toggle('d-none', unread === 0); }
+    const list = document.getElementById('doctor-message-list');
+    list.innerHTML = threads.map(t => `
+      <button type="button" class="list-group-item list-group-item-action" onclick="openPatientConversation(${t.patientId},'${escapeHtml(t.patientName)}')">
+        <div class="d-flex justify-content-between align-items-center"><div class="fw-semibold">${escapeHtml(t.patientName)}</div>${t.count ? '<span class="badge bg-danger">' + t.count + '</span>' : ''}</div>
+        <small class="text-muted text-truncate d-block">${escapeHtml(messageText(t.latest))}</small>
+      </button>
+    `).join('') || '<div class="text-center text-muted py-5">No patient messages yet</div>';
+  }
+
+  function openPatientConversationFromAppointment(patientId, patientName) { switchSection('messages'); if (patientId) openPatientConversation(patientId, patientName); }
+
+  async function openPatientConversation(patientId, patientName) {
+    currentMessagePatientId = patientId;
+    currentMessagePatientName = patientName || 'Patient';
+    document.getElementById('doctor-chat-title').textContent = currentMessagePatientName;
+    document.getElementById('doctor-reply-text').disabled = false;
+    document.getElementById('doctor-reply-btn').disabled = false;
+    await loadDoctorConversation();
+  }
+
+  async function loadDoctorConversation() {
+    if (!currentMessagePatientId) return;
+    try {
+      const messages = await MessageAPI.conversation({ patientId: currentMessagePatientId });
+      renderDoctorConversation(Array.isArray(messages) ? messages : []);
+    } catch(err) { showToast(err.message, 'danger'); }
+  }
+
+  /*function renderDoctorConversation(messages) {
+    const box = document.getElementById('doctor-chat-messages');
+    box.innerHTML = messages.map(m => {
+      const role = messageSenderRole(m);
+      const mine = role.includes('DOCTOR') || m.fromDoctor === true;
+      
+      return `<div class="message-row ${mine ? 'mine' : 'theirs'}">
+        <div class="message-bubble"><div>${escapeHtml(messageText(m))}</div><small>${escapeHtml(messageTime(m))}</small></div></div>`; 
+    }).join('') || '<div class="text-center text-muted py-5">No messages in this conversation yet.</div>';
+    box.scrollTop = box.scrollHeight;
+  } */
+
+  function renderDoctorConversation(messages) {
+
+    const box = document.getElementById('doctor-chat-messages');
+
+    if (!messages || messages.length === 0) {
+        box.innerHTML = `
+            <div class="text-center text-muted py-5">
+                No messages in this conversation yet.
+            </div>
+        `;
+        return;
+    }
+
+    box.innerHTML = messages.map(m => {
+
+        const role = messageSenderRole(m);
+        const mine = role.includes("DOCTOR") || m.fromDoctor === true;
+
+        return `
+            <div class="message-row ${mine ? 'mine' : 'theirs'}">
+
+                <div class="message-bubble ${mine ? 'doctor-message' : 'patient-message'}">
+
+                    <div class="message-header">
+                        ${mine ? '👨‍⚕️ You (Doctor)' : '🧑 Patient'}
+                    </div>
+
+                    <div class="message-text">
+                        ${escapeHtml(messageText(m))}
+                    </div>
+
+                    <div class="message-time">
+                        ${escapeHtml(messageTime(m))}
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+    }).join('');
+
+    box.scrollTop = box.scrollHeight;
+
+}
+
+  document.getElementById('doctor-reply-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('doctor-reply-text');
+    const text = input.value.trim();
+    if (!text || !currentMessagePatientId) return;
+    try {
+      await MessageAPI.doctorReply(currentMessagePatientId, text);
+      input.value = '';
+      await loadDoctorConversation();
+      loadMessages();
     } catch(err) { showToast(err.message, 'danger'); }
   });
 
